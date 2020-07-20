@@ -12,3 +12,10 @@ However, Realtek does not sound like continuing to maintain the RTL8370 iROM pro
 
 ### Where's the file to be programmed into this crab chip?  
 Sorry, not now.
+
+### How to compile?  
+Use a STM32F103C8 Blue Pill  
+Install Arduino  
+Install Arduino_Core_STM32 for Arduino   
+Install STM32CubeProgrammer   
+Open the source code and read the comment    
