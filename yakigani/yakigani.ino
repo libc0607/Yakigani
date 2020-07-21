@@ -4,6 +4,9 @@
 // Board: 'Generic STM32F1 Series', 'Bluepill F103C8', enable USB CDC Serial
 // https://github.com/libc0607/yakigani
 //
+// Hardware: connect PIN_SMI_SDA and PIN_SMI_SCL to RTL8370 SDA(MDIO) & SCL(MDC), with pull-up resistors (~ 1k Ohm)
+// Programming is triggered by (PIN_KEY == LOW)
+//
 // @libc0607 (libc0607@gmail.com)
 //=======================================
 
@@ -248,25 +251,10 @@ int32_t smi_write(uint32_t mAddrs, uint32_t rData)
 int32_t smi_setRegBit(uint32_t mAddrs, uint32_t shift, uint32_t b)
 {
   uint32_t buf = 0;
-  int32_t ret = 0;
   
-  ret = smi_read(mAddrs, &buf);
-  if (ret) {
-    SerialUSB.print("read reg ");SerialUSB.print(mAddrs);SerialUSB.println(" failed");
-    return ret;
-  }
-    
+  smi_read(mAddrs, &buf);
   
-  buf = (b)? buf|(1<<shift): buf&(~(1<<shift));
-  
-  ret = smi_write(mAddrs, buf);
-
-  if (ret) {
-    SerialUSB.print("write reg ");SerialUSB.print(mAddrs);SerialUSB.println(" failed");
-    return ret;
-  }
-
-  return ret;
+  return smi_write(mAddrs, ( (b)? buf|(1<<shift): buf&(~(1<<shift)) ));
 }
 
 void setup() {
@@ -280,6 +268,7 @@ void setup() {
 }
 
 void loop() {
+  
   int i, key, ret;
   uint8_t ipaddr_client[] = IP_ADDR_SWITCH;
   uint8_t ipaddr_server[] = IP_ADDR_SERVER;
@@ -290,16 +279,46 @@ void loop() {
   	delay(50);
   	if (digitalRead(PIN_KEY) == LOW) {
 
-      SerialUSB.println("====================");
-      SerialUSB.println("rtl8370 irom burner");
-      SerialUSB.println("====================");
+      SerialUSB.println("====================================");
+      SerialUSB.println("Yakigani RTL8370 iROM Burner");
+      SerialUSB.println("https://github.com/libc0607/yakigani");
+      SerialUSB.println("====================================");
 
       
   		// 1. write tftp ip addr config to reg
-      delay(1000);
+  		smi_write(0x13A4, (ipaddr_server[0] << 8) | ipaddr_server[1] );
+  		smi_write(0x13A5, (ipaddr_server[2] << 8) | ipaddr_server[3] );
+  		smi_write(0x13A6, (ipaddr_client[0] << 8) | ipaddr_client[1] );
+  		smi_write(0x13A7, (ipaddr_client[2] << 8) | ipaddr_client[3] );
+      SerialUSB.println("write ipaddr finish");
+      delay(100);
       
   		// 2. write irom	
-
+      SerialUSB.print("write irom, size: "); SerialUSB.println(sizeof(irom));
+      
+      smi_setRegBit(0x1322, 4, 1);	// CHIP_RST_8051
+  		smi_setRegBit(0x130c, 5, 1);	// ?
+  		smi_setRegBit(0x1336, 1, 1);	// DW8051_STATUS_REG
+  		smi_setRegBit(0x1322, 2, 0);	// CHIP_RST_CFG
+      
+      delay(100);
+      
+      for (i=0; i<sizeof(irom); i++) {
+  			if (i == 0x2000) {
+          smi_setRegBit(0x1336, 2, 1);  // DW8051_STATUS_REG  // change page?
+          SerialUSB.println("change page");
+  			}
+        smi_write( ((i&0x1FFF) + 0xE000), irom[i]);
+  		}
+      
+      delay(100);
+      
+      smi_setRegBit(0x1336, 2, 0);	// DW8051_STATUS_REG
+  		smi_setRegBit(0x1336, 1, 0);	// DW8051_STATUS_REG
+  		smi_setRegBit(0x1322, 4, 0);	// CHIP_RST_8051
+      
+      SerialUSB.println("finish");
+      
   	}
   }
-}
+} // loop
