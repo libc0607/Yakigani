@@ -5,6 +5,7 @@
 Unofficial Realtek RTL8370 iROM Burner  
 
 ### Why we need this?  
+![8370-ds](https://github.com/libc0607/yakigani/blob/master/pic/8370.jpg)  
 RTL8370 has a built-in DW-8051 kernel which will boot from the internal iROM.   
 If you want to boot RTL8370 from spi nor flash, a small "bootloader" needs to be flashed into the internal iROM.  
 However, Realtek does not sound like continuing to maintain the RTL8370 iROM programming tool   
