@@ -12,7 +12,8 @@ However, Realtek does not sound like continuing to maintain the RTL8370 iROM pro
 (they use the parallel port to simulate I2C to program the chip, and it will run into errors when running on Win10 x64)   
 
 ### Where's the file to be programmed into this crab chip?  
-Sorry, not now.
+First you need to find the crab SDK,  
+then fill `<SDK>/***lws-bootcode-burn-util/write_rom/tftpc_spi.bin` into `const uint8_t irom[]`  
 
 ### How to compile?  
 Use a STM32F103C8 Blue Pill  
