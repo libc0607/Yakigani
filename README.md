@@ -1,5 +1,5 @@
 # Yakigani
-🚧 Under Construction 🚧  
+🚧 Needs test 🚧  
 
 ### What's this? 
 Unofficial Realtek RTL8370 iROM Burner  
